@@ -1,0 +1,22 @@
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { overflow: hidden; background: #000; font-family: monospace; color: #eee; }
+canvas { display: block; image-rendering: pixelated; }
+
+#prompt {
+  position: fixed; bottom: 8%; left: 50%; transform: translateX(-50%);
+  padding: 8px 16px; background: rgba(0,0,0,.7); border: 1px solid #555;
+  letter-spacing: 1px; transition: opacity .15s; opacity: 0; pointer-events: none;
+}
+
+#modal {
+  position: fixed; inset: 0; background: rgba(0,0,0,.75);
+  display: flex; align-items: center; justify-content: center;
+}
+#modal .panel {
+  background: #14121a; border: 2px solid var(--accent); padding: 24px 32px; min-width: 320px;
+}
+#modal h2 { color: var(--accent); margin-bottom: 12px; }
+#modal ul { list-style: none; }
+#modal li { padding: 8px; border-bottom: 1px solid #2a2733; cursor: pointer; }
+#modal li:hover { background: #22202b; }
+#modal button { margin-top: 16px; padding: 6px 14px; background: #22202b; color: #eee; border: 1px solid #444; cursor: pointer; }
