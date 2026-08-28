@@ -14,4 +14,4 @@ game.add(player);
 game.add(new Hub(game, player, ui));
 game.start();
 
-player.loadModel('/models/scientist.glb');
+player.loadModel('/models/player_m.glb');
