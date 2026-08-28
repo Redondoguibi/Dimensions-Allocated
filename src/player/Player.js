@@ -2,7 +2,9 @@ import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
 const MODEL_SCALE = 1 / 16;
+const MODEL_YAW = Math.PI;   // asset exportado olhando para -Z
 const FADE = 0.15;
+const MOVE_EPS = 0.25;       // velocidade² mínima para considerar "andando"
 
 export class Player {
   constructor(game, input) {
@@ -13,18 +15,22 @@ export class Player {
     this.root = new THREE.Group();
     this.velocity = new THREE.Vector3();
 
+    // pivot isola a correção de orientação das animações do gltf
+    this.pivot = new THREE.Group();
+    this.pivot.rotation.y = MODEL_YAW;
+    this.root.add(this.pivot);
+
     this.mixer = null;
     this.actions = {};
     this.current = null;
 
-    // placeholder até chegar o .glb do cientista
     const mesh = new THREE.Mesh(
       new THREE.CapsuleGeometry(0.4, 0.9, 4, 8),
       new THREE.MeshLambertMaterial({ color: 0xc9d4e0 })
     );
     mesh.position.y = 0.85;
     mesh.castShadow = true;
-    this.root.add(mesh);
+    this.pivot.add(mesh);
     this.placeholder = mesh;
 
     game.scene.add(this.root);
@@ -38,7 +44,7 @@ export class Player {
     model.traverse(o => {
       if (!o.isMesh) return;
       o.castShadow = true;
-      o.frustumCulled = false;            // evita sumir com skinning
+      o.frustumCulled = false;
       const map = o.material.map;
       if (map) {
         map.magFilter = THREE.NearestFilter;   // pixel-art
@@ -48,16 +54,10 @@ export class Player {
       }
     });
 
-    this.root.remove(this.placeholder);
-    this.placeholder.geometry.dispose();
-    this.placeholder.material.dispose();
-    this.placeholder = null;
-
-    this.root.add(model);
+    this._disposePlaceholder();
+    this.pivot.add(model);
 
     this.mixer = new THREE.AnimationMixer(model);
-    console.log('[Player] animações:', gltf.animations.map(c => c.name));
-
     for (const clip of gltf.animations) {
       const action = this.mixer.clipAction(clip);
       action.setLoop(THREE.LoopRepeat, Infinity);
@@ -69,6 +69,14 @@ export class Player {
 
     this.play('idle');
     return this;
+  }
+
+  _disposePlaceholder() {
+    if (!this.placeholder) return;
+    this.pivot.remove(this.placeholder);
+    this.placeholder.geometry.dispose();
+    this.placeholder.material.dispose();
+    this.placeholder = null;
   }
 
   play(name) {
@@ -84,10 +92,9 @@ export class Player {
     this.velocity.lerp(dir.multiplyScalar(this.speed), 1 - Math.exp(-18 * dt));
     this.root.position.addScaledVector(this.velocity, dt);
 
-    // troca idle/walk pela velocidade real, não pela tecla
-    this.play(this.velocity.lengthSq() > 0.25 ? 'walk' : 'idle');
+    this.play(this.velocity.lengthSq() > MOVE_EPS ? 'walk' : 'idle');
 
-    // olhar para o cursor
+    // convenção do jogo: +Z é a frente
     const p = this.input.updateWorldPoint();
     this.root.rotation.y = Math.atan2(
       p.x - this.root.position.x,
