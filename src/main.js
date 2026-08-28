@@ -14,5 +14,4 @@ game.add(player);
 game.add(new Hub(game, player, ui));
 game.start();
 
-// quando tiver o modelo:
-// player.loadModel('/models/scientist.gltf');
+player.loadModel('/models/scientist.glb');
